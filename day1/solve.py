@@ -6,8 +6,7 @@ def find_fuel(masses):
     fuel[fuel < 0] = 0
     if numpy.sum(fuel) == 0:
         return fuel
-    new_f = fuel + find_fuel(fuel)
-    return new_f
+    return fuel + find_fuel(fuel)
 
 def part1(masses):
     fuel = (masses // 3) - 2
@@ -18,7 +17,7 @@ def part2(masses):
     print(f'Part 2: {numpy.sum(full)}')
 
 def main():
-    masses = numpy.loadtxt('input.txt', dtype=numpy.uint32)
+    masses = numpy.loadtxt('input.txt', dtype=numpy.int64)
     part1(masses)
     part2(masses)
 
