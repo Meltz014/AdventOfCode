@@ -48,7 +48,7 @@ def exec_program(memory):
 
 def main():
     # part 1
-    memory_ = numpy.loadtxt('input.txt', delimiter=',', dtype=numpy.int64)
+    memory_ = numpy.loadtxt('day2\input.txt', delimiter=',', dtype=numpy.int64)
     memory = numpy.array(memory_, copy=True)
     memory[1] = 12
     memory[2] = 2
@@ -69,4 +69,5 @@ def main():
     print(f'Result for x: {x}, y: {y} is: {memory[0]}')
 
 
-main()
+if __name__ == '__main__':
+    main()

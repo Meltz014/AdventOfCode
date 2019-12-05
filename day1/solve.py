@@ -17,8 +17,9 @@ def part2(masses):
     print(f'Part 2: {numpy.sum(full)}')
 
 def main():
-    masses = numpy.loadtxt('input.txt', dtype=numpy.int64)
+    masses = numpy.loadtxt('day1\input.txt', dtype=numpy.int64)
     part1(masses)
     part2(masses)
 
-main()
+if __name__ == '__main__':
+    main()

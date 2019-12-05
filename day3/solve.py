@@ -1,5 +1,5 @@
 import numpy
-plot = 1
+plot = 0
 GRIDSIZE = 20000
 
 def build_grid(line):
@@ -88,7 +88,7 @@ def find_intersection(line, cross_coords):
 
 def main():
     grids = []
-    with open('input.txt') as fid:
+    with open('day3\input.txt') as fid:
         line_a = fid.readline()
         line_b = fid.readline()
 
@@ -127,4 +127,5 @@ def main():
     min_steps = min(a[0]+b[0] for (a,b) in zip(line_a_steps, line_b_steps))
     print(f'Part 2: min steps: {min_steps}')
 
-main()
+if __name__ == '__main__':
+    main()
