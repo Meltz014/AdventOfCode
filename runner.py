@@ -6,9 +6,11 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-day', required=True)
 args = parser.parse_args()
 
-solve = importlib.import_module(f'day{args.day}.solve')
+day = args.day
 
-print(f'running day{args.day}')
+solve = importlib.import_module(f'day{day}.solve')
+
+print(f'running day{day}')
 start = time.time()
 solve.main()
 end = time.time()
