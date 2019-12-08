@@ -25,7 +25,7 @@ def get_modes(modes_int, n):
 
 
 class CPU():
-    def __init__(self, memory):
+    def __init__(self, memory, input_block=False, input_q=None):
         self.memory = memory
         self.pc = 0
 
@@ -40,10 +40,18 @@ class CPU():
             EQ: self.handle_eq,
         }
 
-        self.input_q = queue.Queue()
+        self.input_block = input_block
+        if not input_q:
+            self.input_q = queue.Queue()
+        else:
+            self.input_q = input_q
+        self.output_q = queue.Queue()
 
     def queue_input(self, user_val):
         self.input_q.put(user_val)
+
+    def get_output(self):
+        return self.output_q.get_nowait()
 
     def exec(self, pc=0):
         self.pc = pc
@@ -102,8 +110,10 @@ class CPU():
         assert in_mode == POS
         out = self.memory[self.pc+1]
         try:
-            user = self.input_q.get_nowait()
-            print(f'Input an int: {user}')
+            if self.input_block:
+                user = self.input_q.get()
+            else:
+                user = self.input_q.get_nowait()
         except queue.Empty:
             user = int(input('Input an int:'))
         self.memory[out] = user
@@ -111,7 +121,8 @@ class CPU():
 
     def handle_output(self, modes):
         (output, ) = self.get_param_vals(modes, 1)
-        print(f'Program output at PC{self.pc}: {output}')
+        #print(f'Program output at PC{self.pc}: {output}')
+        self.output_q.put(output)
         self.pc += 2
 
     def handle_je(self, modes):
