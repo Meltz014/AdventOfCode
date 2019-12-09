@@ -21,13 +21,19 @@ REL = 2
 
 REALLOC_BUF = 1000
 
-def get_modes(modes_int, n):
-    modes = []
-    for i in range(n):
-        modes.append(modes_int % 10)
-        modes_int //= 10
-    return modes
+mode_cache = {}
 
+def get_modes(modes_int, n):
+    global mode_cache
+    modes = mode_cache.get((modes_int, n), None)
+    og_modes = modes_int
+    if not modes:
+        modes = [0] * n
+        for i in range(n):
+            modes[i] = modes_int % 10
+            modes_int //= 10
+        mode_cache[(og_modes, n)] = modes
+    return modes
 
 class CPU():
     def __init__(self, memory, input_block=False, input_q=None):
@@ -64,8 +70,6 @@ class CPU():
         self.pc = pc
         while True:
             opcode_mode = self.memory[self.pc]
-            if opcode_mode == 203:
-                print('break')
             opcode = opcode_mode % 100
             modes = opcode_mode // 100
             if opcode == HALT:
@@ -79,32 +83,34 @@ class CPU():
             else:
                 raise(Exception(f'Invalid opcode {opcode} at position {self.pc}'))
 
-    def _memspace_guard(self, addr):
-        if addr >= len(self.memory):
-            if (addr - len(self.memory)) > REALLOC_BUF:
-                size = addr - len(self.memory) + REALLOC_BUF
-            else:
-                size = REALLOC_BUF
-            self.memory = numpy.append(self.memory, numpy.zeros(size, dtype=self.memory.dtype))
+    def _expand(self):
+        size = len(self.memory) * 2
+        self.memory = numpy.append(self.memory, numpy.zeros(size, dtype=self.memory.dtype))
 
     def read(self, addr):
-        self._memspace_guard(addr)
-        return self.memory[addr]
+        try:
+            return self.memory[addr]
+        except IndexError:
+            self._expand()
+            return self.memory[addr]
 
     def write(self, addr, newval):
-        self._memspace_guard(addr)
-        self.memory[addr] = newval
+        try:
+            self.memory[addr] = newval
+        except IndexError:
+            self._expand()
+            self.memory[addr] = newval
 
     def get_param_vals(self, modes_int, n):
-        vals = []
+        vals = [0] * n
         for (i, mode) in enumerate(get_modes(modes_int, n)):
             param = self.read(self.pc+1+i)
             if mode == POS:
-                vals.append(self.read(param))
+                vals[i] = self.read(param)
             elif mode == IMM:
-                vals.append(param)
+                vals[i] = param
             elif mode == REL:
-                vals.append(self.read(self.relative_base + param))
+                vals[i] = self.read(self.relative_base + param)
 
         return vals
 
