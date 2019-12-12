@@ -1,5 +1,7 @@
 import queue
 import numpy
+import time
+import threading
 
 debug = False
 # opcodes
@@ -23,6 +25,9 @@ REALLOC_BUF = 1000
 
 mode_cache = {}
 
+class Halted(Exception):
+    pass
+
 def get_modes(modes_int, n):
     global mode_cache
     modes = mode_cache.get((modes_int, n), None)
@@ -40,6 +45,7 @@ class CPU():
         self.memory = memory
         self.pc = 0
         self.relative_base = 0
+        self.done = False
 
         self.handlers = {
             ADD: self.handle_add,
@@ -61,10 +67,23 @@ class CPU():
         self.output_q = queue.Queue()
 
     def queue_input(self, user_val):
+        if self.done:
+            raise(Halted())
         self.input_q.put(user_val)
 
-    def get_output(self):
-        return self.output_q.get_nowait()
+    def get_output(self, block=False):
+        if self.done and self.output_q.empty():
+            raise(Halted())
+        if block:
+            while True:
+                if self.done and self.output_q.empty():
+                    raise(Halted())
+                try:
+                    return self.output_q.get_nowait()
+                except queue.Empty:
+                    time.sleep(0)
+        else:
+            return self.output_q.get_nowait()
 
     def exec(self, pc=0):
         self.pc = pc
@@ -73,6 +92,7 @@ class CPU():
             opcode = opcode_mode % 100
             modes = opcode_mode // 100
             if opcode == HALT:
+                self.done = True
                 if debug:
                     print(f'Program halted. PC: {self.pc}')
                 return
@@ -82,6 +102,12 @@ class CPU():
                 func(modes)
             else:
                 raise(Exception(f'Invalid opcode {opcode} at position {self.pc}'))
+        self.done = True
+
+    def background_exec(self, pc=0):
+        self.input_block = True
+        thread = threading.Thread(target=self.exec, args=(pc, ), daemon=True)
+        thread.start()
 
     def _expand(self):
         size = len(self.memory) * 2
