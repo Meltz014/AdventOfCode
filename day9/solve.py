@@ -1,6 +1,6 @@
 import numpy
 from queue import Empty
-from intcode import CPU
+from intcode import CPU, Halted
 
 def main():
     # part 1
@@ -17,8 +17,8 @@ def main():
     print(f'Part 1 output:')
     try:
         while True:
-            print(str(cpu.get_output()) + ' ',)
-    except Empty:
+            print(str(cpu.get_output(False)) + ' ',)
+    except Halted:
         print('done')
 
     ### Part 2
@@ -29,8 +29,8 @@ def main():
     print(f'Part 2 output:')
     try:
         while True:
-            print(str(cpu.get_output()) + ' ',)
-    except Empty:
+            print(str(cpu.get_output(False)) + ' ',)
+    except Halted:
         print('done')
 
 
