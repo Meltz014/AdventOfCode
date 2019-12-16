@@ -65,6 +65,13 @@ class CPU():
         else:
             self.input_q = input_q
         self.output_q = queue.Queue()
+        self.bg_thread = None
+        self.pause = False
+
+    def copy(self):
+        new = CPU(numpy.array(self.memory, copy=True), self.input_block)
+        new.pc = self.pc
+        return new
 
     def queue_input(self, user_val):
         if self.done:
@@ -86,8 +93,9 @@ class CPU():
             return self.output_q.get_nowait()
 
     def exec(self, pc=0):
+        self.pause = False
         self.pc = pc
-        while True:
+        while not self.pause:
             opcode_mode = self.memory[self.pc]
             opcode = opcode_mode % 100
             modes = opcode_mode // 100
@@ -102,12 +110,19 @@ class CPU():
                 func(modes)
             else:
                 raise(Exception(f'Invalid opcode {opcode} at position {self.pc}'))
-        self.done = True
 
     def background_exec(self, pc=0):
+        self.pause = False
         self.input_block = True
-        thread = threading.Thread(target=self.exec, args=(pc, ), daemon=True)
-        thread.start()
+        self.bg_thread = threading.Thread(target=self.exec, args=(pc, ), daemon=True)
+        self.bg_thread.start()
+
+    def pause(self):
+        self.pause = True
+        if self.bg_thread:
+            self.bg_thread.join()
+            self.bg_thread = None
+        return self.pc
 
     def _expand(self):
         size = len(self.memory) * 2
