@@ -82,11 +82,14 @@ class CPU():
         if self.done and self.output_q.empty():
             raise(Halted())
         if block:
+            #print('waiting')
             while True:
                 if self.done and self.output_q.empty():
                     raise(Halted())
                 try:
-                    return self.output_q.get_nowait()
+                    out = self.output_q.get_nowait()
+                    #print(f'done {out}')
+                    return out
                 except queue.Empty:
                     time.sleep(0)
         else:
@@ -117,7 +120,7 @@ class CPU():
         self.bg_thread = threading.Thread(target=self.exec, args=(pc, ), daemon=True)
         self.bg_thread.start()
 
-    def pause(self):
+    def stop(self):
         self.pause = True
         if self.bg_thread:
             self.bg_thread.join()
@@ -189,13 +192,23 @@ class CPU():
         out = self.read(self.pc+1)
         if in_mode == REL:
             out = out + self.relative_base
-        try:
-            if self.input_block:
-                user = self.input_q.get()
-            else:
+
+        if self.input_block:
+            while True:
+                if self.done and self.input_q.empty():
+                    raise(Halted())
+                try:
+                    user = self.input_q.get_nowait()
+                    break
+                except queue.Empty:
+                    if self.pause:
+                        return
+                    time.sleep(0)
+        else:
+            try:
                 user = self.input_q.get_nowait()
-        except queue.Empty:
-            user = int(input('Input an int:'))
+            except queue.Empty:
+                user = int(input('Input an int:'))
         self.write(out, user)
         self.pc += 2
 
