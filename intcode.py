@@ -42,6 +42,7 @@ def get_modes(modes_int, n):
 
 class CPU():
     def __init__(self, memory, input_block=False, input_q=None):
+        self.initial_mem = numpy.array(memory, copy=True)
         self.memory = memory
         self.pc = 0
         self.relative_base = 0
@@ -67,6 +68,18 @@ class CPU():
         self.output_q = queue.Queue()
         self.bg_thread = None
         self.pause = False
+
+    def reset(self):
+        self.stop()
+        self.pause = False
+        self.done = False
+        self.pc = 0
+        self.relative_base = 0
+        self.memory = numpy.array(self.initial_mem, copy=True)
+        while not self.input_q.empty():
+            self.input_q.get()
+        while not self.output_q.empty():
+            self.output_q.get()
 
     def copy(self):
         new = CPU(numpy.array(self.memory, copy=True), self.input_block)
@@ -98,6 +111,7 @@ class CPU():
     def exec(self, pc=0):
         self.pause = False
         self.pc = pc
+        self.done = False
         while not self.pause:
             opcode_mode = self.memory[self.pc]
             opcode = opcode_mode % 100
@@ -132,18 +146,19 @@ class CPU():
         self.memory = numpy.append(self.memory, numpy.zeros(size, dtype=self.memory.dtype))
 
     def read(self, addr):
-        try:
-            return self.memory[addr]
-        except IndexError:
-            self._expand()
-            return self.memory[addr]
+        while True:
+            try:
+                return self.memory[addr]
+            except IndexError:
+                self._expand()
 
     def write(self, addr, newval):
-        try:
-            self.memory[addr] = newval
-        except IndexError:
-            self._expand()
-            self.memory[addr] = newval
+        while True:
+            try:
+                self.memory[addr] = newval
+                break
+            except IndexError:
+                self._expand()
 
     def get_param_vals(self, modes_int, n):
         vals = [0] * n
