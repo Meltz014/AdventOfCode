@@ -2,7 +2,6 @@ import time
 import argparse
 import importlib
 import os
-import ptvsd
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-d', required=True)
