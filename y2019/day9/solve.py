@@ -1,6 +1,6 @@
 import numpy
 from queue import Empty
-from intcode import CPU, Halted
+from y2019.intcode import CPU, Halted
 
 def main():
     # part 1

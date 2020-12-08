@@ -20,8 +20,8 @@ if args.debug:
 
 day = args.d
 year = args.y
-os.chdir(year)
-solve = importlib.import_module(f'{year}.day{day}.solve')
+os.chdir(f'y{year}')
+solve = importlib.import_module(f'y{year}.day{day}.solve')
 
 print(f'running day{day}')
 start = time.time()

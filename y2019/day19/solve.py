@@ -1,7 +1,7 @@
 import numpy
 import os
 from collections import defaultdict
-from intcode import CPU, Halted
+from y2019.intcode import CPU, Halted
 
 def print_grid(grid):
     x_size = max(grid, key=lambda x: x[0])[0] + 1

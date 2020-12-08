@@ -1,5 +1,5 @@
 import numpy
-from intcode import CPU
+from y2019.intcode import CPU
 
 def main():
     # part 1

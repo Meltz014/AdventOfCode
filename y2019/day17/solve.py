@@ -3,7 +3,7 @@ import os
 import threading
 import time
 from collections import defaultdict
-from intcode import CPU, Halted
+from y2019.intcode import CPU, Halted
 import matplotlib.pyplot as plt
 from matplotlib import colors
 from queue import Queue, Empty

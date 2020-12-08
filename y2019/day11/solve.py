@@ -1,7 +1,7 @@
 import numpy
 import matplotlib.pyplot as plt
 from collections import defaultdict
-from intcode import CPU, Halted
+from y2019.intcode import CPU, Halted
 
 BLACK = 0
 WHITE = 1
