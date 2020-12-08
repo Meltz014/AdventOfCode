@@ -45,11 +45,9 @@ class HandHeld():
                 print(f'invalid opcode: {instr, i_arg}')
                 self.halt()
                 break
-            #print((instr, i_arg))
             if self._pc == len(self.program):
                 self.finished = True
                 self.halt()
-        print(f'Program halted pc={self._pc}')
 
     def halt(self):
         self.go = False
