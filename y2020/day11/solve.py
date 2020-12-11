@@ -12,6 +12,7 @@ L.LLLLL.LL""".splitlines()
 
 EMPTY = False
 FULL = True
+to_flip = {}
 
 def count_adj_full(grid, x, y, w, h, part2):
     # a  b  c
@@ -48,17 +49,22 @@ def count_adj_full(grid, x, y, w, h, part2):
     return count
 
 def cycle(grid, width, height, part2=False):
-    to_flip = []
+    global to_flip
+    do_flip = False
     for ((x, y), seat) in grid.items():
         adj = count_adj_full(grid, x, y, width, height, part2)
         if seat and adj >= (5 if part2 else 4):
-            to_flip.append((x, y))
+            to_flip[x,y] = True
+            do_flip = True
         elif (not seat) and (adj == 0):
-            to_flip.append((x, y))
+            to_flip[x,y] = True
+            do_flip = True
 
-    if to_flip:
-        for (x, y) in to_flip:
-            grid[x,y] = not grid[x, y]
+    if do_flip:
+        for ((x, y), flip) in to_flip.items():
+            if flip:
+                grid[x,y] = not grid[x, y]
+                to_flip[x,y] = False
         return True
     return False
 
@@ -82,6 +88,7 @@ def part2(grid, width, height):
 
 
 def main():
+    global to_flip
     with open('day11\input.txt') as fid:
         lines = fid.readlines()
     #lines = example
@@ -92,6 +99,7 @@ def main():
     height = None
     for (y, line) in enumerate(lines):
         for (x, seat) in enumerate(line.strip()):
+            to_flip[x,y] = False
             if seat == 'L':
                 grid[x,y] = EMPTY
             else:
