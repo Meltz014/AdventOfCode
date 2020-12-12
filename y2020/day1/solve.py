@@ -1,31 +1,31 @@
+from AoC import AoC
 
-import numpy
+class Solver(AoC):
+    example_data = """1721
+979
+366
+299
+675
+1456"""
 
-def part1(entries):
-    current = set()
-    for i in entries:
-        if (2020 - i) in current:
-            print(f'Part 1: {(2020 - i) * i}')
-            return
-        else:
-            current.add(i)
+    def parse(self):
+        self.entries = self.read_input_numeric()
 
-def part2(entries):
-    for i in entries:
+    def part1(self):
         current = set()
-        target = 2020 - i
-        for j in entries:
-            if (target - j) in current:
-                print(f'Part 2: {(target - j)} + {j} + {i} = {(target - j) + j + i}')
-                print(f'Part 2: {(target - j) * j * i}')
-                return
+        for i in self.entries:
+            if (2020 - i) in current:
+                return (2020 - i) * i
             else:
-                current.add(j)
+                current.add(i)
 
-def main():
-    entries = numpy.loadtxt('day1\input.txt', dtype=numpy.int64)
-    part1(entries)
-    part2(entries)
-
-if __name__ == '__main__':
-    main()
+    def part2(self):
+        for i in self.entries:
+            current = set()
+            target = 2020 - i
+            for j in self.entries:
+                if (target - j) in current:
+                    #print(f'Part 2: {(target - j)} + {j} + {i} = {(target - j) + j + i}')
+                    return (target - j) * j * i
+                else:
+                    current.add(j)

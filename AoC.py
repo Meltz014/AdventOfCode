@@ -24,7 +24,7 @@ class AoC():
     def read_input_numeric(self, dtype=numpy.int64):
         if self._use_example:
             if self.example_data:
-                return numpy.fromstring(f'day{self._day}\input.txt', dtype=dtype, sep='\n')
+                return numpy.fromstring(self.example_data, dtype=dtype, sep='\n')
             else:
                 print('warning: no example data defined.  Using input.txt')
         return numpy.loadtxt(f'day{self._day}\input.txt', dtype=dtype)
