@@ -25,7 +25,6 @@ mem[8] = 0"""
                     self.chunks.append((mask_1, mask_0, instr))
                     instr = []
                 raw_mask = line.strip().split(' = ')[1]
-                print('     ' + raw_mask)
                 mask_1 = int(raw_mask.replace('X', '0'), 2)
                 mask_0 = int(raw_mask.replace('X', '1'), 2)
             else:
@@ -42,10 +41,7 @@ mem[8] = 0"""
 
     def part1(self):
         for (m1, m0, instr) in self.chunks:
-            #print(f'm1 : {m1:036b}')
-            #print(f'm0 : {m0:036b}')
             for (addr, val) in instr:
-                print(f'  -  {(addr, val)}')
                 val = val | m1
                 val = val & m0
                 self.mem[addr] = val
