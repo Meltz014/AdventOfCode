@@ -11,15 +11,21 @@ class AoC():
         self._day = day
         self._use_example = use_example
 
-    def read_input_txt(self):
+    def read_input_txt(self, split=True):
         if self._use_example:
             if self.example_data:
                 # add \n to replicate behavior of fid.readlines()
-                return [l + '\n' for l in self.example_data.splitlines()]
+                if split:
+                    return [l + '\n' for l in self.example_data.splitlines()]
+                else:
+                    return self.example_data
             else:
                 print('warning: no example data defined.  Using input.txt')
         with open(f'day{self._day}\input.txt') as fid:
-            return fid.readlines()
+            if split:
+                return fid.readlines()
+            else:
+                return fid.read()
 
     def read_input_numeric(self, dtype=numpy.int64):
         if self._use_example:
