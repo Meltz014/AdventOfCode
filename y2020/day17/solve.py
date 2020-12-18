@@ -6,11 +6,14 @@ import re
 
 class GrowingGrid():
     """class to hold 3 dimensional array with automatic reallocation in +/- all dimensions"""
-    def __init__(self, dtype=numpy.bool):
-        self._grid = numpy.zeros((3,3,1), dtype=dtype)
-        self.origin = numpy.zeros(3, dtype=numpy.uint16)
-        self.min_set = [0, 0, 0]
-        self.max_set = [3, 3, 0]
+    def __init__(self, dtype=numpy.bool, ndims=3):
+        if ndims not in [3, 4]:
+            raise Exception('Only 3 or 4 dims!')
+        self.ndims = ndims
+        self._grid = numpy.zeros((3,3,1) if ndims==3 else (3,3,1,1), dtype=dtype)
+        self.origin = numpy.zeros(ndims, dtype=numpy.uint16)
+        self.min_active = [0] * ndims
+        self.max_active = [0] * ndims
 
     def __getitem__(self, coords):
         if isinstance(coords, slice) or any(isinstance(k, slice) for k in coords):
@@ -29,17 +32,12 @@ class GrowingGrid():
             mod_coords = list(coords)
             mod_coords[0] = self.origin[0] + x
 
-        if isinstance(coords, tuple) and len(coords) > 1:
-            y = coords[1]
-            mod_coords[1] = self.origin[1] + y
-            if self.origin[1] + y not in range(self._grid.shape[1]):
-                return False
-
-        if isinstance(coords, tuple) and len(coords) > 2:
-            z = coords[2]
-            mod_coords[2] = self.origin[2] + z
-            if self.origin[2] + z not in range(self._grid.shape[2]):
-                return False
+        for dim in range(1, self.ndims):
+            if isinstance(coords, tuple) and len(coords) > dim:
+                c = coords[dim]
+                mod_coords[dim] = self.origin[dim] + c
+                if self.origin[dim] + c not in range(self._grid.shape[dim]):
+                    return False
 
         if isinstance(mod_coords, list):
             mod_coords = tuple(mod_coords)
@@ -56,55 +54,45 @@ class GrowingGrid():
         for x in range(-1, self._grid.shape[0] + 1):
             for y in range(-1, self._grid.shape[1] + 1):
                 for z in range(-1, self._grid.shape[2] + 1):
-                    yield (x - self.origin[0], y - self.origin[1], z - self.origin[2])
+                    if self.ndims == 3:
+                        yield (x - self.origin[0], y - self.origin[1], z - self.origin[2])
+                    else:
+                        # 4 dims
+                        for j in range(-1, self._grid.shape[3] + 1):
+                            yield (x - self.origin[0], y - self.origin[1], z - self.origin[2], j - self.origin[3])
 
     def iter_bounded(self):
-        for x in range(self.min_set[0]-1, self.max_set[0] + 2):
-            for y in range(self.min_set[1]-1, self.max_set[1] + 2):
-                for z in range(self.min_set[2]-1, self.max_set[2] + 2):
-                    yield (x - self.origin[0], y - self.origin[1], z - self.origin[2])
+        for x in range(self.min_active[0]-1, self.max_active[0] + 2):
+            for y in range(self.min_active[1]-1, self.max_active[1] + 2):
+                for z in range(self.min_active[2]-1, self.max_active[2] + 2):
+                    if self.ndims == 3:
+                        yield (x - self.origin[0], y - self.origin[1], z - self.origin[2])
+                    else:
+                        # 4 dims
+                        for j in range(self.min_active[3]-1, self.max_active[3] + 2):
+                            yield (x - self.origin[0], y - self.origin[1], z - self.origin[2], j - self.origin[3])
+
 
 
     def check_coords(self, coords, setitem=False):
         """runs check_coord on all appropriate coordinates"""
-        mod_coords = coords
+        mod_coords = list(coords)
 
-        # check indices and resize if necessary
-        if isinstance(coords, int):
-            x = coords
-        else:
-            x = coords[0]
-        self.check_coord(x, 0)
-        if setitem:
-            self.min_set[0] = min(self.min_set[0], x)
-            self.max_set[0] = max(self.max_set[0], x)
+        for dim in range(0, self.ndims):
+            # check indices and resize if necessary
+            if isinstance(coords, int):
+                c = coords
+            elif isinstance(coords, tuple) and len(coords) > dim:
+                c = coords[dim]
 
-        if isinstance(coords, int):
-            mod_coords = self.origin[0] + x
-        else:
-            mod_coords = list(coords)
-            mod_coords[0] = self.origin[0] + x
+            self.check_coord(c, dim)
 
-        if isinstance(coords, tuple) and len(coords) > 1:
-            y = coords[1]
-            self.check_coord(y, 1)
-            mod_coords[1] = self.origin[1] + y
-            if setitem:
-                self.min_set[1] = min(self.min_set[1], y)
-                self.max_set[1] = max(self.max_set[1], y)
+            if isinstance(coords, int):
+                # only happens for dim0
+                mod_coords = self.origin[dim] + c
+            else:
+                mod_coords[dim] = self.origin[dim] + c
 
-
-        if isinstance(coords, tuple) and len(coords) > 2:
-            z = coords[2]
-            self.check_coord(z, 2)
-            mod_coords[2] = self.origin[2] + z
-            if setitem:
-                self.min_set[2] = min(self.min_set[2], z)
-                self.max_set[2] = max(self.max_set[2], z)
-
-
-        #print(f'mod_coords: {mod_coords}')
-        #print(f'origin: {self.origin}')
         if isinstance(mod_coords, list):
             mod_coords = tuple(mod_coords)
         return mod_coords
@@ -133,13 +121,27 @@ class GrowingGrid():
             self.origin[dim] += new.shape[dim]
         #print(f'new shape: {self._grid.shape}, origin: {self.origin}')
 
-    def count_active_neighbors(self, x, y, z):
-        neigh = [self[x+nx, y+ny, z+nz] for (nx, ny, nz) in itertools.product([-1, 1, 0], repeat=3) if ((nx, ny, nz) != (0, 0, 0))]
-        #print(f'neigh({x, y, z}): {sum(neigh)}')
+    def count_active_neighbors(self, x, y, z, j=None):
+        if self.ndims == 3:
+            neigh = [self[x+nx, y+ny, z+nz] for (nx, ny, nz) in itertools.product([-1, 1, 0], repeat=3) if ((nx, ny, nz) != (0, 0, 0))]
+        else:
+            # 4 dims
+            neigh = [self[x+nx, y+ny, z+nz, j+nj] for (nx, ny, nz, nj) in itertools.product([-1, 1, 0], repeat=4) if ((nx, ny, nz, nj) != (0, 0, 0, 0))]
+
         return sum(neigh)
 
     def count_active(self):
         return numpy.count_nonzero(self._grid)
+
+    def calc_bounds(self):
+        #print('calc bounds')
+        #self.disp()
+        nz = numpy.nonzero(self._grid)
+        for dim in range(self.ndims):
+            self.min_active[dim] = nz[dim].min()
+            self.max_active[dim] = nz[dim].max()
+        #print(f'min: {self.min_active}')
+        #print(f'max: {self.max_active}')
 
     def disp(self):
         for z in range(self._grid.shape[2]):
@@ -156,45 +158,50 @@ class Solver(AoC):
 
     def parse(self):
         lines = self.read_input_txt()
-        self.grid = GrowingGrid()
+        self.grid3d = GrowingGrid()
+        self.grid4d = GrowingGrid(ndims=4)
         for (y, line) in enumerate(lines):
             for (x, cell) in enumerate(line.strip()):
-                self.grid[x,y,0] = cell == '#'
+                self.grid3d[x,y,0] = cell == '#'
+                self.grid4d[x,y,0,0] = cell == '#'
 
-        print(self.grid._grid)
+        self.grid3d.calc_bounds()
+        self.grid4d.calc_bounds()
+
+        self.grid = self.grid3d
 
     def cycle(self):
-        to_flip = []
-        for (x, y, z) in self.grid.iter_all():
-            if self.grid[x, y, z]:
-                if (self.grid.count_active_neighbors(x, y, z) in [2, 3]):
-                    pass
-                else:
-                    to_flip.append((x, y, z))
-            else:
-                if self.grid.count_active_neighbors(x, y, z) == 3:
-                    to_flip.append((x, y, z))
-
-        print(f'to_flip: {to_flip}')
-
-        for coord in to_flip:
-            self.grid[coord] = not self.grid[coord]
-
-    def part1(self):
         """
         If a cube is active and exactly 2 or 3 of its neighbors are also active, the cube remains active. Otherwise, the cube becomes inactive.
         If a cube is inactive but exactly 3 of its neighbors are active, the cube becomes active. Otherwise, the cube remains inactive.
         """
-        #print(self.grid.count_active_neighbors(0, 0, 0))
-        #print(self.grid.count_active_neighbors(0, 1, 0))
-        #print(self.grid.count_active_neighbors(0, 2, 0))
-        #print(self.grid.count_active_neighbors(1, 0, 0))
-        self.grid.disp()
+        to_flip = []
+        for coords in self.grid.iter_bounded():
+            if self.grid[coords]:
+                if (self.grid.count_active_neighbors(*coords) in [2, 3]):
+                    pass
+                else:
+                    to_flip.append(coords)
+            else:
+                if self.grid.count_active_neighbors(*coords) == 3:
+                    to_flip.append(coords)
+
+        for coord in to_flip:
+            self.grid[coord] = not self.grid[coord]
+
+        self.grid.calc_bounds()
+
+    def part1(self):
+        self.grid = self.grid3d
         for i in range(6):
             self.cycle()
-            #self.grid.disp()
-            #input()
         return self.grid.count_active()
 
     def part2(self):
-        pass
+        print('Warning: part 2 takes ~10min or so')
+        self.grid = self.grid4d
+        for i in range(6):
+            print(f'cycle {i}...', end='')
+            self.cycle()
+            print('done')
+        return self.grid.count_active()
