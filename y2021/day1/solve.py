@@ -17,9 +17,8 @@ class Solver(AoC):
         self.readings = self.read_input_numeric()
 
     def part1(self):
-        return np.count_nonzero(np.diff(self.readings) > 0)
-        
+        return np.sum(np.diff(self.readings) > 0)
 
     def part2(self):
         conv = np.convolve(self.readings, np.ones(3, dtype=int), 'valid')
-        return np.count_nonzero(np.diff(conv) > 0)
+        return np.sum(np.diff(conv) > 0)
