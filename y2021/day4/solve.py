@@ -26,34 +26,31 @@ class Solver(AoC):
         raw = self.read_input_txt()
         raw += ['\n']
         self.draw = np.array([int(i) for i in raw[0].strip('\n').split(',')])
-        self.boards = []
+        boards = []
         board = np.zeros((5,5), dtype=np.uint8)
         row = 0
         for line in raw[2:]:
             if line == '\n':
-                self.boards.append(board.copy())
+                boards.append(board.copy())
                 board = np.zeros((5,5), dtype=np.uint8)
                 row = 0
                 continue
             board[row,:] = np.array([int(i) for i in line.strip('\n').split()], dtype=np.uint8)
             row += 1
+
+        self.boards = np.stack(boards)
         self.reset_game()
 
     def reset_game(self):
-        self.marks = [np.zeros_like(board) for board in self.boards]
+        self.marks = np.zeros_like(self.boards)
 
     def draw_num(self, num):
-        for (mark, board) in zip(self.marks, self.boards):
-            mark[board == num] = 1
+        self.marks[self.boards == num] = 1
 
     def check_win(self):
-        wins = []
-        for (i, mark) in enumerate(self.marks):
-            cols = np.sum(mark, axis=0)
-            rows = np.sum(mark, axis=1)
-            if np.any(cols == 5) or np.any(rows == 5):
-                wins.append(i)
-        return wins
+        cols = np.logical_or.reduce(np.sum(self.marks, axis=1) == 5, axis=1)
+        rows = np.logical_or.reduce(np.sum(self.marks, axis=2) == 5, axis=1)
+        return np.where(np.logical_or(rows, cols))[0]
 
     def part1(self):
         winner = None
@@ -62,14 +59,14 @@ class Solver(AoC):
             self.draw_num(num)
             winners = self.check_win()
             if winners:
+                # Assuming only 1 winner
                 winner = winners[0]
                 win_num = num
-                print(self.boards[winner])
                 break
 
         # sum all unmarked numbers
-        w_board = self.boards[winner]
-        w_marks = self.marks[winner]
+        w_board = self.boards[winner,:,:]
+        w_marks = self.marks[winner,:,:]
         unmarked = np.sum(w_board[w_marks == 0])
         return unmarked * win_num
 
@@ -78,14 +75,16 @@ class Solver(AoC):
         self.reset_game()
         lose_num = 0
         loser = None
+        winners = []
         for (i, num) in enumerate(self.draw):
             self.draw_num(num)
-            winners = self.check_win()
-            if winners:
-                for winner in winners[::-1]:
-                    if len(self.boards) > 1:
-                        self.boards.pop(winner)
-                        self.marks.pop(winner)
+            new_winners = self.check_win()
+            if new_winners.size:
+                for winner in new_winners:
+                    if len(self.boards) - len(winners) > 1:
+                        winners.append(winner)
+                        self.boards[winner,:,:] = 0
+                        self.marks[winner,:,:] = 0
                     else:
                         # loser found
                         lose_num = num
