@@ -2,11 +2,25 @@ import time
 import argparse
 import importlib
 import os
+from timeit import timeit
+
+def format_time(seconds: float) -> str:
+    if seconds > 1e0:
+        return f"{seconds:.2f} sec"
+    if seconds > 1e-3:
+        return f"{int(seconds * 1e3)} ms"
+    if seconds > 1e-6:
+        return f"{int(seconds * 1e6)} μs"
+    if seconds > 1e-9:
+        return f"{int(seconds * 1e9)} ns"
+    return str(seconds)
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-d', required=True)
-parser.add_argument('-y', required=True)
-parser.add_argument('-e', action='store_true', required=False)
+parser.add_argument('-y', help="AoC puzzle year", required=True)
+parser.add_argument('-d', help="AoC puzzle day", required=True)
+parser.add_argument('-e', help="Example data option", action='store_true', required=False)
+parser.add_argument('-b', help="Run timeit benchmark", action='store_true', required=False)
+parser.add_argument('-n', help="Number of times to run for benchmark", required=False, default=1000, type=int)
 parser.add_argument('-debug', action='store_true', required=False)
 
 args = parser.parse_args()
@@ -28,27 +42,35 @@ print(f'running day{day}')
 if hasattr(solve, 'Solver'):
     # new Solver class
     solver = solve.Solver(day, use_example=args.e)
-    parse_start = time.time()
+    parse_start = time.perf_counter()
     solver.parse()
-    parse_end = time.time()
-    p1_start = time.time()
-    p1 = solver.part1()
-    p1_end = time.time()
-    print(f'Part 1: {p1}')
-    p2_start = time.time()
-    p2 = solver.part2()
-    p2_end = time.time()
-    print(f'Part 2: {p2}')
+    parse_end = time.perf_counter()
+    if args.b:
+        elapsed_parse = timeit(solver.parse, number=args.n)
+        elapsed_p1 = timeit(solver.part1, number=args.n)
+        elapsed_p2 = timeit(solver.part2, number=args.n)
+        print(f'Elapsed (parse) (timeit): {format_time(elapsed_parse/args.n)}')
+        print(f'Elapsed (part1) (timeit): {format_time(elapsed_p1/args.n)}')
+        print(f'Elapsed (part2) (timeit): {format_time(elapsed_p2/args.n)}')
+    else:
+        p1_start = time.perf_counter()
+        p1 = solver.part1()
+        p1_end = time.perf_counter()
+        print(f'Part 1: {p1}')
+        p2_start = time.perf_counter()
+        p2 = solver.part2()
+        p2_end = time.perf_counter()
+        print(f'Part 2: {p2}')
 
-    print(f'Elapsed (parse): {parse_end-parse_start}')
-    print(f'Elapsed (part1): {p1_end-p1_start}')
-    print(f'Elapsed (part2): {p2_end-p2_start}')
+        print(f'Elapsed (parse): {format_time(parse_end-parse_start)}')
+        print(f'Elapsed (part1): {format_time(p1_end-p1_start)}')
+        print(f'Elapsed (part2): {format_time(p2_end-p2_start)}')
 
 
 else:
     # legacy main method
-    start = time.time()
+    start = time.perf_counter()
     solve.main()
-    end = time.time()
+    end = time.perf_counter()
 
     print(f'Elapsed: {end-start}s')
