@@ -7,6 +7,10 @@ class Vector:
         self.y_step = 1 if y1 <= y2 else -1
         self.start = np.array([x1, y1], dtype=np.uint32)
         self.end = np.array([x2, y2], dtype=np.uint32)
+        self.min_x = min([self.start[0], self.end[0]])
+        self.min_y = min([self.start[1], self.end[1]])
+        self.max_x = max([self.start[0], self.end[0]])
+        self.max_y = max([self.start[1], self.end[1]])
 
     def is_horiz(self):
         return self.start[1] == self.end[1]
@@ -14,25 +18,13 @@ class Vector:
     def is_vert(self):
         return self.start[0] == self.end[0]
 
-    def min_x(self):
-        return min([self.start[0], self.end[0]])
-
-    def min_y(self):
-        return min([self.start[1], self.end[1]])
-
-    def max_x(self):
-        return max([self.start[0], self.end[0]])
-
-    def max_y(self):
-        return max([self.start[1], self.end[1]])
-
     def get_points(self):
         return (range(self.start[0], self.end[0] + self.x_step, self.x_step),
                 range(self.start[1], self.end[1] + self.y_step, self.y_step))
 
     def get_slice(self):
         # only for Part 1
-        return (slice(self.min_x(), self.max_x()+1), slice(self.min_y(), self.max_y()+1))
+        return (slice(self.min_x, self.max_x+1), slice(self.min_y, self.max_y+1))
 
     def __str__(self):
         return f'{self.start[0]},{self.start[1]} -> {self.end[0]},{self.end[1]}'
@@ -57,12 +49,12 @@ class Solver(AoC):
             (x1, y1) = start.split(',')
             (x2, y2) = end.split(',')
             self.vectors.append(Vector(int(x1), int(y1), int(x2), int(y2)))
-        x = max(self.vectors, key=lambda v: v.max_x()).max_x()
-        y = max(self.vectors, key=lambda v: v.max_y()).max_y()
+        x = max(self.vectors, key=lambda v: v.max_x).max_x
+        y = max(self.vectors, key=lambda v: v.max_y).max_y
         self.grid = np.zeros((x+1, y+1), dtype=np.uint32)
 
     def reset(self):
-        self.grid = np.zeros_like(self.grid)
+        self.grid[:,:] = 0
 
     def part1(self):
         for v in self.vectors:
