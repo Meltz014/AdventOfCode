@@ -22,12 +22,12 @@ class Solver(AoC):
         return np.sum(self.day_rem)
 
     def part2(self):
-        self.day_rem = self.init_days.copy()
+        day_rem = self.day_rem.copy()
 
-        for i in range(256):
+        for i in range(80, 256):
             # shift days rem
-            self.day_rem = np.roll(self.day_rem, -1)
+            day_rem = np.roll(day_rem, -1)
             # account for old fish resetting
-            self.day_rem[6] += self.day_rem[-1]
+            day_rem[6] += day_rem[-1]
 
-        return np.sum(self.day_rem)
+        return np.sum(day_rem)
