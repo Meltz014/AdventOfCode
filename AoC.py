@@ -27,13 +27,13 @@ class AoC():
             else:
                 return fid.read()
 
-    def read_input_numeric(self, dtype=numpy.int64):
+    def read_input_numeric(self, dtype=numpy.int64, sep='\n'):
         if self._use_example:
             if self.example_data:
-                return numpy.fromstring(self.example_data, dtype=dtype, sep='\n')
+                return numpy.fromstring(self.example_data, dtype=dtype, sep=sep)
             else:
                 print('warning: no example data defined.  Using input.txt')
-        return numpy.loadtxt(f'day{self._day}\input.txt', dtype=dtype)
+        return numpy.loadtxt(f'day{self._day}\input.txt', dtype=dtype, delimiter=sep)
 
     def parse(self):
         raise NotImplementedError()
