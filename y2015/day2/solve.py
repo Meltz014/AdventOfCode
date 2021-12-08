@@ -7,7 +7,7 @@ class Solver(AoC):
 
     def parse(self):
         raw = self.read_input_txt()
-        self.boxes = np.zeros((len(raw), 3), dtype=np.uint8)
+        self.boxes = np.zeros((len(raw), 3), dtype=np.uint32)
         for (i, line) in enumerate(raw):
             self.boxes[i,:] = sorted([int(b) for b in line.split('x')])
         print(self.boxes.shape)
@@ -19,4 +19,5 @@ class Solver(AoC):
         return (3*side_a + 2*side_b + 2*side_c).sum()
 
     def part2(self):
-        return None
+        bows = self.boxes[:,0] * 2 + self.boxes[:,1] * 2 + np.multiply.reduce(self.boxes, axis=1)
+        return bows.sum()
