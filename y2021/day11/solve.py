@@ -66,27 +66,16 @@ class Solver(AoC):
         self.grid[self.grid>=10] = 0
         return len(flashers)
 
-    def print_grid(self, clear=True):
-        if clear:
-            sys.stdout.write('\b' * len(str(self.grid)) + str(self.grid))
-            sys.stdout.flush()
-            time.sleep(0.1)
-        else:
-            print(self.grid)
-
     def part1(self):
         n_flash = 0
         for i in range(100):
             n_flash += self.step()
-        #print(self.grid)
         return n_flash
 
     def part2(self):
         cur_step = 100
-        #self.print_grid(clear=False)
         while True:
             flashers = self.step()
-            #self.print_grid()
             cur_step += 1
             if flashers == self.grid.size:
                 return cur_step

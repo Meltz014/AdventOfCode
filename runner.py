@@ -20,6 +20,7 @@ parser.add_argument('-y', help="AoC puzzle year", required=True)
 parser.add_argument('-d', help="AoC puzzle day", required=True)
 parser.add_argument('-e', help="Example data option", action='store_true', required=False)
 parser.add_argument('-b', help="Run timeit benchmark", action='store_true', required=False)
+parser.add_argument('-v', help="Run in visualizer (if available)", action='store_true', required=False)
 parser.add_argument('-n', help="Number of times to run for benchmark", required=False, default=1000, type=int)
 parser.add_argument('-debug', action='store_true', required=False)
 
@@ -40,31 +41,40 @@ solve = importlib.import_module(f'y{year}.day{day}.solve')
 
 print(f'running day{day}')
 if hasattr(solve, 'Solver'):
-    # new Solver class
-    solver = solve.Solver(day, use_example=args.e)
-    parse_start = time.perf_counter()
-    solver.parse()
-    parse_end = time.perf_counter()
-    if args.b:
-        elapsed_parse = timeit(solver.parse, number=args.n)
-        elapsed_p1 = timeit(solver.part1, number=args.n)
-        elapsed_p2 = timeit(solver.part2, number=args.n)
-        print(f'Elapsed (parse) (timeit): {format_time(elapsed_parse/args.n)}')
-        print(f'Elapsed (part1) (timeit): {format_time(elapsed_p1/args.n)}')
-        print(f'Elapsed (part2) (timeit): {format_time(elapsed_p2/args.n)}')
-    else:
-        p1_start = time.perf_counter()
-        p1 = solver.part1()
-        p1_end = time.perf_counter()
-        print(f'Part 1: {p1}')
-        p2_start = time.perf_counter()
-        p2 = solver.part2()
-        p2_end = time.perf_counter()
-        print(f'Part 2: {p2}')
+    if args.v:
+        # run in visualizer
+        if args.b:
+            print('-b option not supported in visualizer mode!')
 
-        print(f'Elapsed (parse): {format_time(parse_end-parse_start)}')
-        print(f'Elapsed (part1): {format_time(p1_end-p1_start)}')
-        print(f'Elapsed (part2): {format_time(p2_end-p2_start)}')
+        visualize = importlib.import_module(f'y{year}.day{day}.visualize')
+
+        solver = visualize.Solver(day, use_example=args.e)
+        solver.visualize()
+    else:
+        solver = solve.Solver(day, use_example=args.e)
+        parse_start = time.perf_counter()
+        solver.parse()
+        parse_end = time.perf_counter()
+        if args.b:
+            elapsed_parse = timeit(solver.parse, number=args.n)
+            elapsed_p1 = timeit(solver.part1, number=args.n)
+            elapsed_p2 = timeit(solver.part2, number=args.n)
+            print(f'Elapsed (parse) (timeit): {format_time(elapsed_parse/args.n)}')
+            print(f'Elapsed (part1) (timeit): {format_time(elapsed_p1/args.n)}')
+            print(f'Elapsed (part2) (timeit): {format_time(elapsed_p2/args.n)}')
+        else:
+            p1_start = time.perf_counter()
+            p1 = solver.part1()
+            p1_end = time.perf_counter()
+            print(f'Part 1: {p1}')
+            p2_start = time.perf_counter()
+            p2 = solver.part2()
+            p2_end = time.perf_counter()
+            print(f'Part 2: {p2}')
+
+            print(f'Elapsed (parse): {format_time(parse_end-parse_start)}')
+            print(f'Elapsed (part1): {format_time(p1_end-p1_start)}')
+            print(f'Elapsed (part2): {format_time(p2_end-p2_start)}')
 
 
 else:
