@@ -121,11 +121,6 @@ def explode(sf):
 def split(num, root):
     return SnailFish([floor(num/2), ceil(num/2)], root=root)
 
-def reduce(sf):
-    while not sf.is_reduced():
-        if not reduce_explode(sf):
-            reduce_split(sf)
-
 def reduce_explode(sf):
     if isinstance(sf.left, int) and isinstance(sf.right, int) and sf.depth >= 4:
         explode(sf)
@@ -158,6 +153,10 @@ def reduce_split(sf):
         r = reduce_split(sf.right)
     return r
 
+def reduce(sf):
+    while not sf.is_reduced():
+        if not reduce_explode(sf):
+            reduce_split(sf)
 
 class Solver(AoC):
     example_data = """[[[0,[5,8]],[[1,7],[9,6]]],[[4,[1,2]],[[1,4],2]]]
@@ -182,11 +181,11 @@ class Solver(AoC):
             self.snail_fish.append(SnailFish(line_list))
 
     def part1(self):
+        # sum of all lines
         root = self.snail_fish[0]
         for sf in self.snail_fish[1:]:
             root = root + sf
             reduce(root)
-            #input()
 
         return root.magnitude
 

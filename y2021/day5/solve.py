@@ -1,6 +1,7 @@
 from AoC import AoC
 import numpy as np
-
+import matplotlib.pyplot as plt
+from matplotlib.colors import Normalize
 class Vector:
     def __init__(self, x1, y1, x2, y2):
         self.x_step = 1 if x1 <= x2 else -1
@@ -66,4 +67,6 @@ class Solver(AoC):
         self.reset()
         for v in self.vectors:
             self.grid[v.get_points()] += 1
+        plt.imshow(self.grid, norm=Normalize(vmin=0, vmax=self.grid.max()))
+        plt.show()
         return np.sum(self.grid > 1)
