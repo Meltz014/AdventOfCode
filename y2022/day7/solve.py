@@ -1,6 +1,33 @@
 from AoC import AoC
 import os
-from pprint import pprint as print
+
+class Node():
+    def __init__(self, name, parent, size=0):
+        self.name = name
+        self.parent = parent
+        self.children = []
+        self.size = size
+        self.update_size()
+
+    def update_size(self):
+        parent = self.parent
+        while parent:
+            parent.size += self.size
+            parent = parent.parent
+
+    @property
+    def path(self):
+        # recurse to root
+        if not self.parent:
+            return '/'
+        return f'{self.parent.path}/{self.name}'
+
+    def __str__(self):
+        _str = f'{self.path}: {self.size}'
+        for c in self.children:
+            _str += '\n' + str(c)
+        return _str
+
 
 class Solver(AoC):
     example_data = """$ cd /
@@ -29,48 +56,28 @@ $ ls
 
     def parse(self):
         raw = self.read_input_txt(split=True)
-        files = []
-        tree = [0, {}]
+        tree = Node('/', None, 0)
         cwd = tree
-        path = ''
-        for (i, line) in enumerate(raw):
+        for line in raw:
             line = line.strip()
             if line[0] == '$':
                 if 'cd' in line:
-                    print(line)
                     if '..' in line:
-                        path = os.path.split(path[:-1])[0]
-                        cwd = tree
-                        if len(path) > 1:
-                            path += '/'
-                            print(('cd .. ', path, path.split('/')[1:-1]))
-                            for d in path.split('/')[1:-1]:
-                                cwd = cwd[1][d]
+                        cwd = cwd.parent
                     else:
                         dirname = line.split('cd ')[1]
-                        print(dirname)
                         if dirname == '/':
-                            path = '/'
+                            cwd = tree
                         else:
-                            cwd[1][dirname] = [0, {}]
-                            cwd = cwd[1][dirname]
-                            path = path + f'{dirname}/'
-                    print(f'>> {path}')
+                            new = Node(dirname, cwd, 0)
+                            cwd.children.append(new)
+                            cwd = new
             else:
                 if 'dir' in line:
                     continue
                 (size, fname) = line.split(' ')
-                cwd[1][fname] = int(size)
-                cwd[0] += int(size)
-                # need to update parents too
-                if len(path) > 1:
-                    c = tree
-                    for d in path.split('/')[1:-2]:
-                        c = c[1][d]
-                        c[0] += int(size)
+                cwd.children.append(Node(fname, cwd, int(size)))
 
-
-        print(tree)
         self.tree = tree
 
     def part1(self):
@@ -82,10 +89,11 @@ $ ls
 
         def summit(tree):
             nonlocal tot
-            if tree[0] <= 100000:
-                tot += tree[0]
-            for (name, sub) in tree[1].items():
-                if isinstance(sub, list):
+            if tree.size <= 100000:
+                tot += tree.size
+            for sub in tree.children:
+                if sub.children:
+                    # only count dirs (where children are non-empty)
                     summit(sub)
         summit(self.tree)
         return tot
@@ -96,24 +104,25 @@ $ ls
         Smallest dir to free up at least 30000000
         """
         # ok, need to recalculate root size
-        self.tree[0] = 0
-        for (name, thing) in self.tree[1].items():
-            if isinstance(thing, list):
-                self.tree[0] += thing[0]
-            else:
-                self.tree[0] += thing
-        print(f'Used space: {self.tree[0]}')
-        free = 70000000 - self.tree[0]
+        #self.tree[0] = 0
+        #for (name, thing) in self.tree[1].items():
+        #    if isinstance(thing, list):
+        #        self.tree[0] += thing[0]
+        #    else:
+        #        self.tree[0] += thing
+        print(f'Used space: {self.tree.size}')
+        free = 70000000 - self.tree.size
         print(f'Free space: {free}')
         enough = 30000000 - free
         print(f'Needed space = {enough}')
         cur_min = 70000000
         def search(tree):
             nonlocal cur_min
-            if tree[0] >= enough and tree[0] < cur_min:
-                cur_min = tree[0]
-            for (name, sub) in tree[1].items():
-                if isinstance(sub, list):
+            if tree.size >= enough and tree.size < cur_min:
+                cur_min = tree.size
+            for sub in tree.children:
+                if sub.children:
+                    # only count dirs (where children are non-empty)
                     search(sub)
         search(self.tree)
         return cur_min
