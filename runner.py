@@ -23,6 +23,7 @@ parser.add_argument('-b', help="Run timeit benchmark", action='store_true', requ
 parser.add_argument('-v', help="Run in visualizer (if available)", action='store_true', required=False)
 parser.add_argument('-n', help="Number of times to run for benchmark", required=False, default=1000, type=int)
 parser.add_argument('-debug', action='store_true', required=False)
+parser.add_argument('-dp', action='store_true', required=False)
 
 args = parser.parse_args()
 
@@ -51,7 +52,7 @@ if hasattr(solve, 'Solver'):
         solver = visualize.Solver(day, use_example=args.e)
         solver.visualize()
     else:
-        solver = solve.Solver(day, use_example=args.e)
+        solver = solve.Solver(day, use_example=args.e, debug=args.dp)
         parse_start = time.perf_counter()
         solver.parse()
         parse_end = time.perf_counter()

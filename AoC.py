@@ -7,8 +7,9 @@ class AoC():
 
     example_data = ""
 
-    def __init__(self, day, use_example=False):
+    def __init__(self, day, use_example=False, debug=False):
         self._day = day
+        self._debug = debug
         self._use_example = use_example
 
     def read_input_txt(self, split=True):
