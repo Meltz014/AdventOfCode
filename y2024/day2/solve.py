@@ -5,10 +5,10 @@ from collections import Counter
 
 def is_safe(row):
     diffs = np.diff(row)
-    _safe = np.logical_or(np.all(diffs < 0), np.all(diffs > 0))
-    # check for all diffs 0 < diff <= 3
-    safe = np.logical_and(_safe, np.all(np.logical_and(np.abs(diffs) <= 3, np.abs(diffs) > 0)))
-    return safe
+    if not ((diffs < 0).all() or (diffs > 0).all()):
+        return False
+    diffs = np.abs(diffs)
+    return ((diffs <= 3) & (diffs > 0)).all()
 
 
 class Solver(AoC):
