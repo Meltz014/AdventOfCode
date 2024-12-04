@@ -23,17 +23,21 @@ parser.add_argument('-b', help="Run timeit benchmark", action='store_true', requ
 parser.add_argument('-v', help="Run in visualizer (if available)", action='store_true', required=False)
 parser.add_argument('-n', help="Number of times to run for benchmark", required=False, default=1000, type=int)
 parser.add_argument('-debug', action='store_true', required=False)
-parser.add_argument('-dp', action='store_true', required=False)
+parser.add_argument('-dp', help="enable debug prints", action='store_true', required=False)
 
 args = parser.parse_args()
 
 if args.debug:
-    import ptvsd
+    #import ptvsd
+    import debugpy
     # Allow other computers to attach to ptvsd at this IP address and port.
-    ptvsd.enable_attach(address=('0.0.0.0', 30000), redirect_output=True)
+    port = 3000
+    #ptvsd.enable_attach(address=('0.0.0.0', port), redirect_output=True)
+    debugpy.listen(('0.0.0.0', port))
     # Pause the program until a remote debugger is attached
-    print(f'waiting for debugger to attach on port {30000}...')
-    ptvsd.wait_for_attach()
+    print(f'waiting for debugger to attach on port {port}...')
+    #ptvsd.wait_for_attach(timeout)
+    debugpy.wait_for_client()
 
 day = args.d
 year = args.y
@@ -52,6 +56,8 @@ if hasattr(solve, 'Solver'):
         solver = visualize.Solver(day, use_example=args.e)
         solver.visualize()
     else:
+        if args.e:
+            args.dp = True
         solver = solve.Solver(day, use_example=args.e, debug=args.dp)
         parse_start = time.perf_counter()
         solver.parse()
