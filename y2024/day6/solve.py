@@ -50,6 +50,12 @@ class Solver(AoC):
         0, -1 -> -1, 0
 
         """
+        dir_to_char = {
+            (0, -1): '^',
+            (1, 0): '>',
+            (0, 1): 'v',
+            (-1, 0): '<'
+        }
         total = 1 # Account for starting position
         direction = (0, -1)
         self.visited = {self.start: '^'}
@@ -67,14 +73,7 @@ class Solver(AoC):
                 pos = step
                 if not cur:
                     total += 1
-                    if direction == (-1, 0):
-                        c = '<'
-                    elif direction == (0, -1):
-                        c = '^'
-                    elif direction == (1, 0):
-                        c = '>'
-                    elif direction == (0, 1):
-                        c = 'v'
+                    c = dir_to_char[direction]
                     self.visited[step] = c
 
         if self._debug:
@@ -118,24 +117,12 @@ class Solver(AoC):
                     cur = new_visited.get(step)
                     pos = step
                     if cur:
-                        if (
-                            (direction == (-1, 0) and cur == "<")
-                            or (direction == (0, -1) and cur == "^")
-                            or (direction == (1, 0) and cur == ">")
-                            or (direction == (0, 1) and cur == "v")
-                        ):
+                        if cur == dir_to_char[direction]:
                             # found a loop
                             total += 1
                             break
                     else:
-                        if direction == (-1, 0):
-                            c = '<'
-                        elif direction == (0, -1):
-                            c = '^'
-                        elif direction == (1, 0):
-                            c = '>'
-                        elif direction == (0, 1):
-                            c = 'v'
+                        c = dir_to_char[direction]
                         new_visited[step] = c
 
         return total
