@@ -84,13 +84,27 @@ class Solver(AoC):
     def part2(self):
         """
         """
+        char_to_dir = {
+            '^': (0, -1),
+            '>': (1, 0),
+            'v': (0, 1),
+            '<': (-1, 0)
+        }
+        dir_to_char = {
+            (0, -1): '^',
+            (1, 0): '>',
+            (0, 1): 'v',
+            (-1, 0): '<'
+        }
         total = 0
+        new_visited_template = {}
         for new_obs in self.visited:
             if new_obs == self.start:
                 continue
-            direction = (0, -1)
-            pos = self.start
-            new_visited = {}
+            new_visited_template[new_obs] = self.visited[new_obs]
+            direction = char_to_dir[self.visited[new_obs]]
+            new_visited = new_visited_template.copy()
+            pos = new_obs[0] - direction[0], new_obs[1] - direction[1]
             while True:
                 step = pos[0] + direction[0], pos[1] + direction[1]
                 if step[0] > self.bounds[0] or step[1] > self.bounds[1] or step[0] < 0 or step[1] < 0:
