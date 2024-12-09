@@ -1,82 +1,106 @@
 from AoC import AoC
+from itertools import combinations
+from tqdm import tqdm
 
 class Solver(AoC):
-    example_data = """190: 10 19
-3267: 81 40 27
-83: 17 5
-156: 15 6
-7290: 6 8 6 15
-161011: 16 10 13
-192: 17 8 14
-21037: 9 7 18 13
-292: 11 6 16 20
-"""
+    example_data = """............
+........0...
+.....0......
+.......0....
+....0.......
+......A.....
+............
+............
+........A...
+.........A..
+............
+............"""
+
+    def show_grid(self, antinodes):
+        for y in range(self.size[1] + 1):
+            for x in range(self.size[0] + 1):
+                if (y,x ) in antinodes:
+                    print('X', end='')
+                else:
+                    print('.', end='')
+            print()
+        print('======================================')
+        for y in range(self.size[1] + 1):
+            for x in range(self.size[0] + 1):
+                a = False
+                for (ant_type, antennas) in self.antennas.items():
+                    if (y,x ) in antennas:
+                        print(ant_type, end='')
+                        a = True
+                if not a:
+                    print('.', end='')
+            print()
+
 
     def parse(self):
-        self.tests = []
-        self.data = []
+        self.tqdm_total = 0
+        self.antennas = {}
         raw = self.read_input_txt()
-        for line in raw:
-            t, d = line.strip().split(':')
-            self.tests.append(int(t))
-            self.data.append([int(n) for n in d.split()])
+        for y, line in enumerate(raw):
+            for x, char in enumerate(line.strip()):
+                if char != '.':
+                    if char not in self.antennas:
+                        self.antennas[char] = []
+                    self.antennas[char].append((y,x))
+        for char in self.antennas:
+            self.tqdm_total += len(list(combinations(self.antennas[char], r=2)))
 
-        self.debug(self.tests)
-        self.debug(self.data)
+        self.size = (y,x)
 
+    def is_in_bounds(self, y, x):
+        return y >= 0 and x >=0 and y <= self.size[0] and x <= self.size[1]
     def part1(self):
         """
+        count unique antinodes
         """
-        total = 0
+        antinodes = set()
+        #pbar = tqdm(total=self.tqdm_total)
+        for antenna_type, antennas in self.antennas.items():
+            for ((y1, x1),(y2, x2)) in combinations(antennas, r=2):
+                # compute antinodes
+                self.debug(f'combo {antenna_type} {y1, x1}, {y2, x2}')
+                dy, dx = y2-y1, x2-x1
+                ay, ax = y1-dy, x1-dx
+                self.debug(f'dydx {dy, dx}')
+                if self.is_in_bounds(ay, ax):
+                    antinodes.add((ay, ax))
+                ay, ax = y2+dy, x2+dx
+                if self.is_in_bounds(ay, ax):
+                    antinodes.add((ay, ax))
+                #pbar.update(1)
+        #pbar.close()
 
-        def is_valid(test, first, rest):
-            _prod = first * rest[0]
-            _sum = first + rest[0]
-            if len(rest) == 1:
-                if _prod == test or _sum == test:
-                    return True
-                else:
-                    return False
-            else:
-                ret = False
-                #if _prod < test:
-                #    ret = is_valid(test, _prod, rest[1:])
-                #if not ret and _sum < test:
-                #    ret = is_valid(test, _sum, rest[1:])
-                return is_valid(test, _prod, rest[1:]) or is_valid(test, _sum, rest[1:])
-
-        for test, data in zip(self.tests, self.data):
-            if is_valid(test, data[0], data[1:]):
-                self.debug(test, 'is valid')
-                total += test
-
-        return total
+        self.show_grid(antinodes)
+        return len(antinodes)
 
     def part2(self):
         """
         """
-        total = 0
+        antinodes = set()
+        #pbar = tqdm(total=self.tqdm_total)
+        for antenna_type, antennas in self.antennas.items():
+            for ((y1, x1),(y2, x2)) in combinations(antennas, r=2):
+                # compute antinodes
+                self.debug(f'combo {antenna_type} {y1, x1}, {y2, x2}')
+                antinodes.add((y1, x1))
+                antinodes.add((y2, x2))
+                dy, dx = y2-y1, x2-x1
+                ay, ax = y1-dy, x1-dx
+                self.debug(f'dydx {dy, dx}')
+                while self.is_in_bounds(ay, ax):
+                    antinodes.add((ay, ax))
+                    ay, ax = ay-dy, ax-dx
+                ay, ax = y2+dy, x2+dx
+                while self.is_in_bounds(ay, ax):
+                    antinodes.add((ay, ax))
+                    ay, ax = ay+dy, ax+dx
+                #pbar.update(1)
+        #pbar.close()
+        self.show_grid(antinodes)
 
-        def is_valid(test, first, rest):
-            _prod = first * rest[0]
-            _sum = first + rest[0]
-            _concat = int(str(first) + str(rest[0]))
-            if len(rest) == 1:
-                if _prod == test or _sum == test or _concat == test:
-                    return True
-                else:
-                    return False
-            else:
-                ret = False
-                #if _prod < test:
-                #    ret = is_valid(test, _prod, rest[1:])
-                #if not ret and _sum < test:
-                #    ret = is_valid(test, _sum, rest[1:])
-                return is_valid(test, _prod, rest[1:]) or is_valid(test, _sum, rest[1:]) or is_valid(test, _concat, rest[1:])
-
-        for test, data in zip(self.tests, self.data):
-            if is_valid(test, data[0], data[1:]):
-                self.debug(test, 'is valid')
-                total += test
-
-        return total
+        return len(antinodes)
