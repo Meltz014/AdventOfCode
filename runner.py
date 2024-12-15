@@ -65,6 +65,7 @@ if hasattr(solve, 'Solver'):
         if args.b:
             elapsed_parse = timeit(solver.parse, number=args.n)
             elapsed_p1 = timeit(solver.part1, number=args.n)
+            solver.is_part_2 = True
             elapsed_p2 = timeit(solver.part2, number=args.n)
             print(f'Elapsed (parse) (timeit): {format_time(elapsed_parse/args.n)}')
             print(f'Elapsed (part1) (timeit): {format_time(elapsed_p1/args.n)}')
@@ -75,6 +76,7 @@ if hasattr(solve, 'Solver'):
             p1_end = time.perf_counter()
             print(f'Part 1: {p1}')
             p2_start = time.perf_counter()
+            solver.is_part_2 = True
             p2 = solver.part2()
             p2_end = time.perf_counter()
             print(f'Part 2: {p2}')

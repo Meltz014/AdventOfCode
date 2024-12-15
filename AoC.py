@@ -11,6 +11,7 @@ class AoC():
         self._day = day
         self._debug = debug
         self._use_example = use_example
+        self.is_part_2 = False
 
     def read_input_txt(self, split=True):
         if self._use_example:
